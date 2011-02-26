@@ -74,10 +74,11 @@ take any required and optional arguments and call the associated fitbit method."
                                                need-to-url-encode#))]
          (~handler (~(symbol "http" (name req-method))
                     req-uri#
-                    :query (merge query-params#
-                                  oauth-creds#)
+                    :query query-params#
+                    :headers {"Authorization" (oauth/authorization-header oauth-creds#)}
                     :parameters (http/map->params 
-                                 {:use-expect-continue false})
+                                 {:use-expect-continue false
+                                  :default-proxy (http/http-host :host "127.0.0.1" :port 8765)})
                     :as :json))))))
 
 ;;;; Almost every method, and all functionality, of the fitbit API

@@ -1,10 +1,11 @@
 (ns example)
 
 (require 'fitbit
-         ['oauth.client :as 'oauth])
+         ['oauth.client :as 'oauth]
+         'settings)
 
-(def consumer (oauth/make-consumer CONSUMER_KEY
-                                   CONSUMER_SECRET
+(def consumer (oauth/make-consumer (:consumer_key settings/settings)
+                                   (:consumer_secret settings/settings)
                                    "http://api.fitbit.com/oauth/request_token"
                                    "http://api.fitbit.com/oauth/access_token"
                                    "http://api.fitbit.com/oauth/authorize"
@@ -19,8 +20,12 @@
 ;; 
 ;; If you are using OAuth with a desktop application, a callback URI
 ;; is not required. 
-(oauth/user-approval-uri consumer 
-                         request-token)
+(println (str "Open this URL in your browser: "
+  (oauth/user-approval-uri consumer request-token)))
+
+;; read PIN from user
+(println "Enter your PIN:")
+(def settings (merge settings/settings {:pin (read-line)}))
 
 ;; Assuming the User has approved the request token, trade it for an access token.
 ;; The access token will then be used when accessing protected resources for the User.
@@ -30,10 +35,10 @@
 ;; for more information.
 (def access-token-response (oauth/access-token consumer 
                                                request-token
-                                               PIN))
+                                               (:pin settings)))
 
 ;; get the activities
-(fitbit/with-oauth consumer 
+(println (fitbit/with-oauth consumer 
                     (:oauth_token access-token-response)
                     (:oauth_token_secret access-token-response)
-                    (fitbit/activities))
+                    (fitbit/activities)))

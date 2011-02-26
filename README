@@ -1,6 +1,8 @@
 # clj-fitbit
 
-FIXME: write description
+Simple library to access the Fitbit API. Check out http://dev.fitbit.com to get more information about the API itself.
+
+This library aims to create a bunch of simple methods that allow you to obtain the OAuth authorization and give access to all available API methods.
 
 ## Usage
 
