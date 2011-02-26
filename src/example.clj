@@ -42,3 +42,8 @@
                     (:oauth_token access-token-response)
                     (:oauth_token_secret access-token-response)
                     (fitbit/activities)))
+;; get weight
+(println (fitbit/with-oauth consumer 
+                    (:oauth_token access-token-response)
+                    (:oauth_token_secret access-token-response)
+                    (fitbit/weight)))

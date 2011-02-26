@@ -40,14 +40,14 @@
 (defmacro def-fitbit-method
   "Given basic specifications of a fitbit API method, build a function that will
 take any required and optional arguments and call the associated fitbit method."
-  [method-name req-method req-url required-params optional-params handler]
+  [method-name req-method req-url req-url-elements required-params optional-params handler]
   (let [required-fn-params (vec (sort (map #(symbol (name %))
                                            required-params)))
         optional-fn-params (vec (sort (map #(symbol (name %))
                                            optional-params)))]
     `(defn ~method-name
        [~@required-fn-params & rest#]
-       (let [req-uri# (str *protocol* "://" ~req-url)
+       (let [req-uri# (str *protocol* "://" ~req-url (apply str (interpose "/" ~req-url-elements)))
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
@@ -78,19 +78,13 @@ take any required and optional arguments and call the associated fitbit method."
                     :headers {"Authorization" (oauth/authorization-header oauth-creds#)}
                     :parameters (http/map->params 
                                  {:use-expect-continue false
-                                  :default-proxy (http/http-host :host "127.0.0.1" :port 8765)})
+                                  :default-proxy (http/http-host :host "127.0.0.1" :port 8765)
+                                 })
                     :as :json))))))
 
 ;;;; Almost every method, and all functionality, of the fitbit API
 ;;;; is defined below with def-fitbit-method or a custom function to support
 ;;;; special cases, such as uploading image files.
-
-(def-fitbit-method activities
-  :get
-  "api.fitbit.com/1/user/-/activities/date/2011-02-20.json"
-  []
-  []
-  (comp #(:content %) status-handler))
 
 (defn status-handler
   "Handle the various HTTP status codes that may be returned when accessing
@@ -111,3 +105,25 @@ the fitbit API."
                                                  (remaining-requests [] (headers "X-RateLimit-Remaining"))
                                                  (rate-limit-reset [] (java.util.Date. 
                                                                        (long (headers "X-RateLimit-Reset")))))))))
+
+;;
+;; Fitbit API methods
+;;
+
+(def-fitbit-method activities
+  :get
+  "api.fitbit.com/1/user/-/activities/date/"
+  ;; this are the parameters to the URL at the moment
+  ["2011-02-26.json"]
+  []
+  []
+  (comp #(:content %) status-handler))
+
+(def-fitbit-method weight
+  :get
+  "api.fitbit.com/1/user/-/body/weight/date/"
+  ;; this are the parameters to the URL at the moment
+  ["2011-02-26" "7d.json"]
+  []
+  []
+  (comp #(:content %) status-handler))
