@@ -17,6 +17,7 @@
 (def *oauth-access-token* nil)
 (def *oauth-access-token-secret* nil)
 (def *protocol* "http")
+(def *format* "json")
 
 ;; Get JSON from clj-apache-http 
 (defmethod http/entity-as :json [entity as state]
@@ -47,7 +48,7 @@ take any required and optional arguments and call the associated fitbit method."
                                            optional-params)))]
     `(defn ~method-name
        [~@required-fn-params & rest#]
-       (let [req-uri# (str *protocol* "://" ~req-url (apply str (interpose "/" ~req-url-elements)))
+       (let [req-uri# (str *protocol* "://" ~req-url (apply str (interpose "/" (into (pop ~req-url-elements) [(str (last ~req-url-elements) "." *format*)]))))
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
@@ -114,7 +115,7 @@ the fitbit API."
   :get
   "api.fitbit.com/1/user/-/activities/date/"
   ;; this are the parameters to the URL at the moment
-  ["2011-02-26.json"]
+  ["2011-02-26"]
   []
   []
   (comp #(:content %) status-handler))
@@ -123,7 +124,7 @@ the fitbit API."
   :get
   "api.fitbit.com/1/user/-/body/weight/date/"
   ;; this are the parameters to the URL at the moment
-  ["2011-02-26" "7d.json"]
+  ["2011-02-26" "7d"]
   []
   []
   (comp #(:content %) status-handler))
