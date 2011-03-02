@@ -1,15 +1,11 @@
-(ns fitbit
+(ns fitbit.fitbit
   (:use [clojure.contrib.json :only [read-json]]
         [clojure.contrib.java-utils :only [as-str]])
   (:require [clojure.set :as set]
             [clojure.string :as string]
             [com.twinql.clojure.http :as http]
-            [fitbit.query :as query]
             [oauth.client :as oauth]
-            [oauth.signature])
-  (:import (java.io File)
-           (org.apache.http.entity.mime.content FileBody)
-           (org.apache.http.entity.mime MultipartEntity)))
+            [oauth.signature]))
 
 (declare status-handler)
 
@@ -37,6 +33,35 @@
   `(binding [*protocol* "https"]
      (do 
        ~@body)))
+
+;;;; Almost every method, and all functionality, of the fitbit API
+;;;; is defined below with def-fitbit-method or a custom function to support
+;;;; special cases, such as uploading image files.
+
+(defn status-handler
+  "Handle the various HTTP status codes that may be returned when accessing
+the fitbit API."
+  [result]
+  (condp #(if (coll? %1)  
+            (first (filter (fn [x] (== x %2)) %1))
+            (== %2 %1)) (:code result)
+    200 result
+    304 nil
+    [400 401 403 404 406 500 502 503] (let [body (:content result)
+                                            headers (into {} (:headers result))
+                                            error-msg (:error body)
+                                            error-code (:code result)
+                                            request-uri (:request body)]
+                                        (throw (proxy [Exception] [(str "[" error-code "] " error-msg ". [" request-uri "]")]
+                                                 (request [] (body "request"))
+                                                 (remaining-requests [] (headers "X-RateLimit-Remaining"))
+                                                 (rate-limit-reset [] (java.util.Date. 
+                                                                       (long (headers "X-RateLimit-Reset")))))))))
+
+;;
+;; Fitbit API methods
+;;
+
 
 (defmacro def-fitbit-method
   "Given basic specifications of a fitbit API method, build a function that will
@@ -82,34 +107,6 @@ take any required and optional arguments and call the associated fitbit method."
                                   :default-proxy (http/http-host :host "127.0.0.1" :port 8765)
                                  })
                     :as :json))))))
-
-;;;; Almost every method, and all functionality, of the fitbit API
-;;;; is defined below with def-fitbit-method or a custom function to support
-;;;; special cases, such as uploading image files.
-
-(defn status-handler
-  "Handle the various HTTP status codes that may be returned when accessing
-the fitbit API."
-  [result]
-  (condp #(if (coll? %1)  
-            (first (filter (fn [x] (== x %2)) %1))
-            (== %2 %1)) (:code result)
-    200 result
-    304 nil
-    [400 401 403 404 406 500 502 503] (let [body (:content result)
-                                            headers (into {} (:headers result))
-                                            error-msg (:error body)
-                                            error-code (:code result)
-                                            request-uri (:request body)]
-                                        (throw (proxy [Exception] [(str "[" error-code "] " error-msg ". [" request-uri "]")]
-                                                 (request [] (body "request"))
-                                                 (remaining-requests [] (headers "X-RateLimit-Remaining"))
-                                                 (rate-limit-reset [] (java.util.Date. 
-                                                                       (long (headers "X-RateLimit-Reset")))))))))
-
-;;
-;; Fitbit API methods
-;;
 
 (def-fitbit-method activities
   :get
