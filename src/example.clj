@@ -1,8 +1,8 @@
 (ns example)
 
-(require 'fitbit
+(require 'fitbit.fitbit
          ['oauth.client :as 'oauth]
-         'settings)
+         'fitbit.settings)
 
 (def consumer (oauth/make-consumer (:consumer_key settings/settings)
                                    (:consumer_secret settings/settings)
@@ -46,4 +46,4 @@
 (println (fitbit/with-oauth consumer 
                     (:oauth_token access-token-response)
                     (:oauth_token_secret access-token-response)
-                    (fitbit/weight)))
+                    (fitbit/weight "2011-02-26" "7d")))
