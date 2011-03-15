@@ -1,14 +1,29 @@
-# clj-fitbit
+Purpose of this project
+=======================
 
-Simple library to access the Fitbit API. Check out http://dev.fitbit.com to get more information about the API itself.
+This library gives you a way to access the Fitbit API. Check out 
+http://dev.fitbit.com to get more information about the API itself.
 
-This library aims to create a bunch of simple methods that allow you to obtain the OAuth authorization and give access to all available API methods.
+The main goal is easy access to your data on Fitbit. The OAuth 
+authorization is part of this library, but relies on *clj-oauth*.
 
-## Usage
+A simple client is included to show you how to use this library, but
+the focus is on obtaining the data and providing it as clojure data
+structures.
 
-FIXME: write
+Usage
+=====
 
-## License
+Client
+------
+
+    lein deps
+    lein repl
+    (use 'fitbit)
+
+
+License
+=======
 
 Copyright (C) 2011 FIXME
 
